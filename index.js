@@ -30,6 +30,13 @@ async function run() {
             res.send(result);
         });
 
+        app.post('/fruits', async (req, res) => {
+            const newItem = req.body;
+            console.log(newItem);
+            const result = await fruitCollection.insertOne(newItem);
+            res.send(result);
+        })
+
         app.put('/fruits/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
