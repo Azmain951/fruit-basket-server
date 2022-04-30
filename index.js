@@ -17,10 +17,20 @@ async function run() {
         const fruitCollection = client.db('fruit-basket').collection('fruits');
 
         app.get('/fruits', async (req, res) => {
-            const query = {};
-            const cursor = fruitCollection.find(query);
-            const fruits = await cursor.toArray();
-            res.send(fruits);
+            if (req.query.email) {
+                const email = req.query.email;
+                const query = { email };
+                const cursor = fruitCollection.find(query);
+                const fruits = await cursor.toArray();
+                console.log(fruits);
+                res.send(fruits);
+            }
+            else {
+                const query = {};
+                const cursor = fruitCollection.find(query);
+                const fruits = await cursor.toArray();
+                res.send(fruits);
+            }
         });
 
         app.get('/fruits/:id', async (req, res) => {
