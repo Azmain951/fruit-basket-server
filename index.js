@@ -42,26 +42,18 @@ async function run() {
         })
 
         app.get('/fruits', async (req, res) => {
-            const query = {};
-            const cursor = fruitCollection.find(query);
-            const fruits = await cursor.toArray();
-            res.send(fruits);
-        });
-
-        app.get('/fruit', verifyToken, async (req, res) => {
-            const decodedEmail = req.decoded.email;
             if (req.query.email) {
-                if (req.query.email === decodedEmail) {
-                    const email = req.query.email;
-                    const query = { email };
-                    const cursor = fruitCollection.find(query);
-                    const fruits = await cursor.toArray();
-                    console.log(fruits);
-                    res.send(fruits);
-                }
-                else {
-                    res.status(403).send({ message: 'Forbidden Access' })
-                }
+                const email = req.query.email;
+                const query = { email };
+                const cursor = fruitCollection.find(query);
+                const fruits = await cursor.toArray();
+                res.send(fruits);
+            }
+            else {
+                const query = {};
+                const cursor = fruitCollection.find(query);
+                const fruits = await cursor.toArray();
+                res.send(fruits);
             }
         });
 
