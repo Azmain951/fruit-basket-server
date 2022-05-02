@@ -1,5 +1,6 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const ObjectId = require('mongodb').ObjectId;
 const express = require('express');
 const cors = require('cors');
@@ -10,7 +11,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@azmain951.wvuu0.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -18,6 +18,14 @@ async function run() {
     try {
         await client.connect();
         const fruitCollection = client.db('fruit-basket').collection('fruits');
+
+        app.post('/login', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '30d'
+            });
+            res.send({ token });
+        })
 
         app.get('/fruits', async (req, res) => {
 
