@@ -10,6 +10,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+function verifyToken(req, res, next) {
+    const header = req.headers.authorization;
+    if (!header) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+    const token = header.split('')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' })
+        }
+        req.decoded = decoded;
+    })
+    next();
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@azmain951.wvuu0.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -27,15 +41,20 @@ async function run() {
             res.send({ token });
         })
 
-        app.get('/fruits', async (req, res) => {
-
+        app.get('/fruits', verifyToken, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             if (req.query.email) {
-                const email = req.query.email;
-                const query = { email };
-                const cursor = fruitCollection.find(query);
-                const fruits = await cursor.toArray();
-                console.log(fruits);
-                res.send(fruits);
+                if (req.query.email === decodedEmail) {
+                    const email = req.query.email;
+                    const query = { email };
+                    const cursor = fruitCollection.find(query);
+                    const fruits = await cursor.toArray();
+                    console.log(fruits);
+                    res.send(fruits);
+                }
+                else {
+                    res.status(403).send({ message: 'Forbidden Access' })
+                }
             }
             else {
                 const query = {};
