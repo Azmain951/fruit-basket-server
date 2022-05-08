@@ -33,6 +33,7 @@ async function run() {
         await client.connect();
         const fruitCollection = client.db('fruit-basket').collection('fruits');
 
+        // user login and create jwt token api
         app.post('/login', async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -41,6 +42,7 @@ async function run() {
             res.send({ token });
         });
 
+        // get all fruits api
         app.get('/fruits', async (req, res) => {
             const query = {};
             const cursor = fruitCollection.find(query);
@@ -48,6 +50,7 @@ async function run() {
             res.send(fruits);
         });
 
+        // get fruit by email and jwt verification api
         app.get('/fruit', verifyToken, async (req, res) => {
             const decodedEmail = req.decoded.email;
             if (req.query.email) {
@@ -64,6 +67,7 @@ async function run() {
             }
         });
 
+        // get fruit by id api
         app.get('/fruits/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -71,12 +75,14 @@ async function run() {
             res.send(result);
         });
 
+        // add fruit api
         app.post('/fruits', async (req, res) => {
             const newItem = req.body;
             const result = await fruitCollection.insertOne(newItem);
             res.send(result);
         })
 
+        // update fruit by id api
         app.put('/fruits/:id', async (req, res) => {
             const id = req.params.id;
             const updatedQuantity = req.body;
@@ -92,6 +98,7 @@ async function run() {
             res.send(result);
         });
 
+        // delete fruit api
         app.delete('/fruits/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
