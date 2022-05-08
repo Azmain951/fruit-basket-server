@@ -15,14 +15,14 @@ function verifyToken(req, res, next) {
     if (!header) {
         return res.status(401).send({ message: 'unauthorized access' });
     }
-    const token = header.split('')[1];
+    const token = header.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).send({ message: 'Forbidden Access' })
         }
         req.decoded = decoded;
+        next();
     })
-    next();
 }
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@azmain951.wvuu0.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -39,21 +39,28 @@ async function run() {
                 expiresIn: '30d'
             });
             res.send({ token });
-        })
+        });
 
         app.get('/fruits', async (req, res) => {
+            const query = {};
+            const cursor = fruitCollection.find(query);
+            const fruits = await cursor.toArray();
+            res.send(fruits);
+        });
+
+        app.get('/fruit', verifyToken, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             if (req.query.email) {
                 const email = req.query.email;
-                const query = { email };
-                const cursor = fruitCollection.find(query);
-                const fruits = await cursor.toArray();
-                res.send(fruits);
-            }
-            else {
-                const query = {};
-                const cursor = fruitCollection.find(query);
-                const fruits = await cursor.toArray();
-                res.send(fruits);
+                if (email === decodedEmail) {
+                    const query = { email };
+                    const cursor = fruitCollection.find(query);
+                    const fruits = await cursor.toArray();
+                    res.send(fruits);
+                }
+                else {
+                    res.status(403).send({ message: 'Forbidden Access' });
+                }
             }
         });
 
@@ -66,14 +73,12 @@ async function run() {
 
         app.post('/fruits', async (req, res) => {
             const newItem = req.body;
-            console.log(newItem);
             const result = await fruitCollection.insertOne(newItem);
             res.send(result);
         })
 
         app.put('/fruits/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
             const updatedQuantity = req.body;
             const filter = { _id: ObjectId(id) };
             const options = { upsert: true };
